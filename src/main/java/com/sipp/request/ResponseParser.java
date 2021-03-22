@@ -53,7 +53,9 @@ public class ResponseParser {
         while ((topCommentsIterator.hasNext())) {
             current = topCommentsIterator.next();
             log.info(String.valueOf(current.get("kind").asText()));
-            parseCommentHelper(current.get("data"), null, comments);
+            if (!current.get("kind").toString().equals("\"more\"")) {
+                parseCommentHelper(current.get("data"), null, comments);
+            }
         }
         log.info(String.valueOf(comments.size()));
         log.info(comments.toString());
@@ -64,7 +66,7 @@ public class ResponseParser {
         Comment comment = new Comment();
         //deleted comments cannot be added however they preserve their responses which will be processed like top comments
         log.info("current: " + current.toString());
-        boolean deletedFlag = current.get("body").toString().equals("\"[deleted]\"");
+        boolean deletedFlag = (current.get("body").toString().equals("\"[deleted]\"") || (current.get("author").toString().equals("\"[deleted]\"")));
         if (!deletedFlag) {
 
             comment.setAuthor(current.get("author_fullname").toString());
@@ -87,8 +89,8 @@ public class ResponseParser {
             for (JsonNode reply : replies) {
                 //only most relevant comments will be saved. Loading all of the comments would greatly multiply the number of requests.
                 //might be added in the future if found useful enough to compensate the slowdown. "more" element is used for loading these.
-                if (reply.get("kind").toString().equals("more")) {
-                    break;
+                if (reply.get("kind").toString().equals("\"more\"")) {
+                  break;
                 } else if (!deletedFlag) {
                     parseCommentHelper(reply.get("data"), comment, comments);
                 } else {

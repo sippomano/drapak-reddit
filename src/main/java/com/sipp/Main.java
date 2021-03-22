@@ -14,10 +14,6 @@ import java.util.List;
 public class Main {
 
     public static void main(String[] args) throws IOException, URISyntaxException, InterruptedException {
-//       String json = Requests.getHot("juul");
-//       List<Post> posts = ResponseParser.parsePostList(json);
-//       log.info(String.valueOf(posts.size()));
-
         RService.fetchData();
     }
 }
