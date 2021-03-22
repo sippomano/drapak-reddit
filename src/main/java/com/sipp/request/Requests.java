@@ -39,14 +39,8 @@ public class Requests {
                     .build();
             request.setHeaders(headers);
             request.setURI(uri);
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(client.execute(request).getEntity().getContent()))){
-                StringBuilder sb = new StringBuilder();
-                String line = null;
-                while ((line = reader.readLine()) != null) {
-                    sb.append(line);
-                }
-                return sb.toString();
-            }
+
+            return executeRequestReturnResponse(client, request);
         }
     }
 
@@ -61,14 +55,18 @@ public class Requests {
             HttpGet request = new HttpGet("https://oauth.reddit.com" + postPermalink);
             request.setHeaders(headers);
 
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(client.execute(request).getEntity().getContent()))){
-                StringBuilder sb = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    sb.append(line);
-                }
-                return sb.toString();
+            return executeRequestReturnResponse(client, request);
+        }
+    }
+
+    private static String executeRequestReturnResponse(CloseableHttpClient client, HttpGet request) throws IOException {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(client.execute(request).getEntity().getContent()))){
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
             }
+            return sb.toString();
         }
     }
 

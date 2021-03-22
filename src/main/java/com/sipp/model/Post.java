@@ -17,9 +17,11 @@ public class Post {
     private String permalink;
     private String title;
     private String flair;
+    private int commentsCount;//contains unloaded comments, explanation in ResponseParser.parseCommentHelper()
     private int awardsCount;
     private int score;
     private long creationTime;
     private List<Comment> comments;
+
 
 }

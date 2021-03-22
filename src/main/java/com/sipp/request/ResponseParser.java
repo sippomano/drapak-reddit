@@ -25,8 +25,8 @@ public class ResponseParser {
                 current = current.get("data");
                 Post post = new Post();
                 post.setAuthor(current.get("author_fullname").toString());
-                post.setComments(null);//"num_comments"?
-                post.setPermalink(current.get("permalink").toString());
+                post.setCommentsCount(current.get("num_comments").asInt());
+                post.setPermalink(current.get("permalink").toString().replaceAll("\"", ""));
                 post.setAwardsCount(current.get("all_awardings").size());
                 post.setSubreddit(current.get("subreddit").toString());
                 post.setText(current.get("selftext").toString());
@@ -62,22 +62,38 @@ public class ResponseParser {
 
     private static void parseCommentHelper(JsonNode current, Comment parent, List<Comment> comments) {
         Comment comment = new Comment();
+        //deleted comments cannot be added however they preserve their responses which will be processed like top comments
+        log.info("current: " + current.toString());
+        boolean deletedFlag = current.get("body").toString().equals("\"[deleted]\"");
+        if (!deletedFlag) {
 
-        comment.setAuthor(current.get("author_fullname").toString());
-        comment.setText(current.get("body").toString());
-        comment.setPermalink(current.get("permalink").toString());
-        comment.setSubreddit(current.get("subreddit").toString());
-        comment.setAwardsCount(current.get("all_awardings").size());
-        comment.setScore(current.get("score").asInt());
-        comment.setCreationTime(current.get("created").asLong());
-        comment.setParent(parent);
+            comment.setAuthor(current.get("author_fullname").toString());
+            comment.setText(current.get("body").toString());
+            comment.setPermalink(current.get("permalink").toString());
+            comment.setSubreddit(current.get("subreddit").toString());
+            comment.setAwardsCount(current.get("all_awardings").size());
+            comment.setScore(current.get("score").asInt());
+            comment.setCreationTime(current.get("created").asLong());
+            comment.setParent(parent);
+            log.info("adding comment: " + comment.toString());
+            comments.add(comment);
+            log.info("current comment permalink: " + comment.getPermalink());
 
-        comments.add(comment);
-
+        }
         if (!current.get("replies").isEmpty()) {
             JsonNode replies = current.get("replies").get("data").get("children");
+            log.info("number of replies: " + replies.size());
+
             for (JsonNode reply : replies) {
-                parseCommentHelper(reply.get("data"), comment, comments);
+                //only most relevant comments will be saved. Loading all of the comments would greatly multiply the number of requests.
+                //might be added in the future if found useful enough to compensate the slowdown. "more" element is used for loading these.
+                if (reply.get("kind").toString().equals("more")) {
+                    break;
+                } else if (!deletedFlag) {
+                    parseCommentHelper(reply.get("data"), comment, comments);
+                } else {
+                    parseCommentHelper(reply.get("data"), null, comments);
+                }
             }
         }
     }
