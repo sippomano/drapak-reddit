@@ -41,7 +41,7 @@ public final class Token {
             String id = tokenProperties.getProperty("scriptId");
 
             String uuid = UUID.randomUUID().toString();
-            HttpPost request = new HttpPost("https://www.reddit.com/api/v1/access_token");
+            HttpPost request = new HttpPost(AppProperties.getProperty("tokenUrl"));
             request.setHeader("Authorization", encodeRequest(id, key));
             request.setHeader("User-Agent", "windows:com.example.drapak:v0.0.1 (by /u/WesternBot)");
 

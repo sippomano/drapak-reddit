@@ -24,16 +24,16 @@ public class ResponseParser {
             for (JsonNode current : posts) {
                 current = current.get("data");
                 Post post = new Post();
-                post.setAuthor(current.get("author_fullname").toString());
+                post.setAuthor(stripDoubleQuotes(current.get("author_fullname").toString()));
                 post.setCommentsCount(current.get("num_comments").asInt());
-                post.setPermalink(current.get("permalink").toString().replaceAll("\"", ""));
+                post.setPermalink(stripDoubleQuotes(current.get("permalink").toString()));
                 post.setAwardsCount(current.get("all_awardings").size());
-                post.setSubreddit(current.get("subreddit").toString());
-                post.setText(current.get("selftext").toString());
-                post.setTitle(current.get("title").toString());
+                post.setSubreddit(stripDoubleQuotes(current.get("subreddit").toString()));
+                post.setText(stripDoubleQuotes(current.get("selftext").toString()));
+                post.setTitle(stripDoubleQuotes(current.get("title").toString()));
                 post.setScore(current.get("score").asInt());
                 post.setCreationTime(current.get("created").asLong());
-                post.setFlair(current.get("link_flair_text").toString());
+                post.setFlair(stripDoubleQuotes(current.get("link_flair_text").toString()));
 
                 System.out.println(post.toString());
                 postList.add(post);
@@ -53,7 +53,9 @@ public class ResponseParser {
         while ((topCommentsIterator.hasNext())) {
             current = topCommentsIterator.next();
             log.info(String.valueOf(current.get("kind").asText()));
-            parseCommentHelper(current.get("data"), null, comments);
+            if (!current.get("kind").toString().equals("\"more\"")) {
+                parseCommentHelper(current.get("data"), null, comments);
+            }
         }
         log.info(String.valueOf(comments.size()));
         log.info(comments.toString());
@@ -62,15 +64,15 @@ public class ResponseParser {
 
     private static void parseCommentHelper(JsonNode current, Comment parent, List<Comment> comments) {
         Comment comment = new Comment();
-        //deleted comments cannot be added however they preserve their responses which will be processed like top comments
+        //comments deleted by author/moderator cannot be added however they preserve their responses which will be processed like top comments
         log.info("current: " + current.toString());
-        boolean deletedFlag = current.get("body").toString().equals("\"[deleted]\"");
+        boolean deletedFlag = (current.get("body").toString().equals("\"[deleted]\"") || (current.get("author").toString().equals("\"[deleted]\"")));
         if (!deletedFlag) {
 
-            comment.setAuthor(current.get("author_fullname").toString());
-            comment.setText(current.get("body").toString());
-            comment.setPermalink(current.get("permalink").toString());
-            comment.setSubreddit(current.get("subreddit").toString());
+            comment.setAuthor(stripDoubleQuotes(current.get("author_fullname").toString()));
+            comment.setText(stripDoubleQuotes(current.get("body").toString()));
+            comment.setPermalink(stripDoubleQuotes(current.get("permalink").toString()));
+            comment.setSubreddit(stripDoubleQuotes(current.get("subreddit").toString()));
             comment.setAwardsCount(current.get("all_awardings").size());
             comment.setScore(current.get("score").asInt());
             comment.setCreationTime(current.get("created").asLong());
@@ -87,7 +89,7 @@ public class ResponseParser {
             for (JsonNode reply : replies) {
                 //only most relevant comments will be saved. Loading all of the comments would greatly multiply the number of requests.
                 //might be added in the future if found useful enough to compensate the slowdown. "more" element is used for loading these.
-                if (reply.get("kind").toString().equals("more")) {
+                if (reply.get("kind").toString().equals("\"more\"")) {
                     break;
                 } else if (!deletedFlag) {
                     parseCommentHelper(reply.get("data"), comment, comments);
@@ -96,5 +98,9 @@ public class ResponseParser {
                 }
             }
         }
+    }
+
+    private static String stripDoubleQuotes(String text) {
+        return text.substring(1, text.length()-1);
     }
 }
