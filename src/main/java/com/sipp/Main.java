@@ -1,7 +1,10 @@
 package com.sipp;
 
+import com.sipp.dao.CommentDao;
+import com.sipp.dao.sql.CommentDaoSql;
 import com.sipp.dao.sql.DataSourceSupplier;
 import com.sipp.dao.sql.PostDaoSql;
+import com.sipp.model.Comment;
 import com.sipp.model.Post;
 import com.sipp.request.Requests;
 import com.sipp.request.ResponseParser;
@@ -20,6 +23,6 @@ import java.util.Optional;
 public class Main {
 
     public static void main(String[] args) throws IOException, URISyntaxException, InterruptedException {
-
+        RService.fetchData();
     }
 }

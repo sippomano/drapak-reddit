@@ -7,7 +7,8 @@ CREATE TABLE IF NOT EXISTS public.comments
     "awardsCount" numeric NOT NULL,
     score numeric NOT NULL,
     "creationTime" bigint NOT NULL,
-    "parentPermalink" text COLLATE pg_catalog."default"
+    "parentPermalink" text COLLATE pg_catalog."default",
+     CONSTRAINT comments_pkey PRIMARY KEY (permalink)
 )
 
     TABLESPACE pg_default;

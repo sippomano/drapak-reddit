@@ -35,7 +35,7 @@ public class ResponseParser {
                 post.setCreationTime(current.get("created").asLong());
                 post.setFlair(stripDoubleQuotes(current.get("link_flair_text").toString()));
 
-                System.out.println(post.toString());
+                log.info(post.toString());
                 postList.add(post);
             }
        return postList;
@@ -45,7 +45,7 @@ public class ResponseParser {
         ObjectMapper mapper = new ObjectMapper();
         ArrayNode root = (ArrayNode) mapper.readTree(json);
         Requests.prettyPrint(json);
-
+        String postPermalink = stripDoubleQuotes(root.get(0).get("data").get("children").get(0).get("data").get("permalink").toString());
         List<Comment> comments = new ArrayList<>();
         //first element in root[] is the post
         Iterator<JsonNode> topCommentsIterator = root.get(1).get("data").get("children").iterator();
@@ -57,6 +57,7 @@ public class ResponseParser {
                 parseCommentHelper(current.get("data"), null, comments);
             }
         }
+        comments.forEach(c -> c.setPostPermalink(postPermalink));
         log.info(String.valueOf(comments.size()));
         log.info(comments.toString());
         return comments;
@@ -76,7 +77,9 @@ public class ResponseParser {
             comment.setAwardsCount(current.get("all_awardings").size());
             comment.setScore(current.get("score").asInt());
             comment.setCreationTime(current.get("created").asLong());
-            comment.setParent(parent);
+            if (parent != null) {
+                comment.setParentPermalink(parent.getPermalink());
+            }
             log.info("adding comment: " + comment.toString());
             comments.add(comment);
             log.info("current comment permalink: " + comment.getPermalink());

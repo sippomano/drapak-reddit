@@ -9,7 +9,8 @@ public interface CommentDao {
 
     void addComments(List<Comment> comments);
     Optional<Comment> getComment(String permalink);
-    Comment getComments();
-    Comment getComments(long since);
-    Comment getComments(long since, long until);
+    List<Comment> getComments();
+    List<Comment> getComments(long since);
+    List<Comment> getComments(long since, long until);
+    List<Comment> getCommentsForPost(String postPermalink);
 }

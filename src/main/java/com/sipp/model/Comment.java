@@ -17,6 +17,6 @@ public class Comment {
     private int awardsCount;
     private int score;
     private long creationTime;
-    private Comment parent;
+    private String parentPermalink;
 
 }
