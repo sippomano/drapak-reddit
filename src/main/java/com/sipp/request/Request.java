@@ -18,7 +18,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 @Slf4j
-public class Requests {
+public class Request {
 
     private static Header[] headers;
 
@@ -31,17 +31,8 @@ public class Requests {
         }
     }
 
-    public static String getHot(String subreddit) throws IOException, URISyntaxException {
-        try (CloseableHttpClient client = HttpClients.createDefault()) {
-            HttpGet request = new HttpGet("https://oauth.reddit.com/r/" + subreddit.toLowerCase() + "/hot");
-            URI uri = new URIBuilder(request.getURI())
-                    .addParameter("limit", "100")
-                    .build();
-            request.setHeaders(headers);
-            request.setURI(uri);
-
-            return executeRequestReturnResponse(client, request);
-        }
+    public enum PostCategory {
+        HOT, RISING, TOP, CONTROVERSIAL, NEW;
     }
 
     static void prettyPrint(String json) throws JsonProcessingException {
@@ -67,6 +58,35 @@ public class Requests {
                 sb.append(line);
             }
             return sb.toString();
+        }
+    }
+
+    public static String getListing(String subreddit, PostCategory postCategory) throws IOException, URISyntaxException {
+        switch (postCategory) {
+            case HOT:
+                return getPosts(subreddit, "/hot");
+            case TOP:
+                return getPosts(subreddit, "/top");
+            case RISING:
+                return getPosts(subreddit, "/rising");
+            case CONTROVERSIAL:
+                return getPosts(subreddit, "/controversial");
+            case NEW:
+                return getPosts(subreddit, "/new");
+        }
+        throw new IllegalArgumentException("None of the passed values matched values in the switch for post categories. Check if all values in the PostCategory enum are in the switch statement");
+    }
+
+    private static String getPosts(String subreddit, String suffix) throws IOException, URISyntaxException {
+        try (CloseableHttpClient client = HttpClients.createDefault()) {
+            HttpGet request = new HttpGet("https://oauth.reddit.com/r/" + subreddit.toLowerCase() + suffix);
+            URI uri = new URIBuilder(request.getURI())
+                    .addParameter("limit", "100")
+                    .build();
+            request.setHeaders(headers);
+            request.setURI(uri);
+
+            return executeRequestReturnResponse(client, request);
         }
     }
 

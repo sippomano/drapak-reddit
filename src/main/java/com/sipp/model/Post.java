@@ -9,11 +9,13 @@ import java.util.List;
 @AllArgsConstructor
 @Getter
 @Setter
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Post {
 
     private String author;
     private String text;
     private String subreddit;
+    @EqualsAndHashCode.Include
     private String permalink;
     private String title;
     private String flair;

@@ -18,13 +18,15 @@ public class ResponseParser {
     public static List<Post> parsePostList(String json) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode root = mapper.readTree(json);
-        Requests.prettyPrint(root.toString());
+        Request.prettyPrint(root.toString());
         List<Post> postList = new ArrayList<>();
         JsonNode posts = root.get("data").get("children");
             for (JsonNode current : posts) {
                 current = current.get("data");
+                Request.prettyPrint(current.toString());
                 Post post = new Post();
-                post.setAuthor(stripDoubleQuotes(current.get("author_fullname").toString()));
+                post.setAuthor(stripDoubleQuotes(current.get("author").toString()
+                        .equals("\"[deleted]\"") ? current.get("author").toString() : current.get("author_fullname").toString()));
                 post.setCommentsCount(current.get("num_comments").asInt());
                 post.setPermalink(stripDoubleQuotes(current.get("permalink").toString()));
                 post.setAwardsCount(current.get("all_awardings").size());
@@ -44,7 +46,7 @@ public class ResponseParser {
     public static List<Comment> parseCommentTree(String json) throws JsonProcessingException{
         ObjectMapper mapper = new ObjectMapper();
         ArrayNode root = (ArrayNode) mapper.readTree(json);
-        Requests.prettyPrint(json);
+        Request.prettyPrint(json);
         String postPermalink = stripDoubleQuotes(root.get(0).get("data").get("children").get(0).get("data").get("permalink").toString());
         List<Comment> comments = new ArrayList<>();
         //first element in root[] is the post

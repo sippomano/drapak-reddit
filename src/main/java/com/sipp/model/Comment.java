@@ -7,10 +7,12 @@ import lombok.*;
 @AllArgsConstructor
 @Getter
 @Setter
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Comment {
 
     private String author;
     private String text;
+    @EqualsAndHashCode.Include
     private String permalink;
     private String subreddit;
     private String postPermalink;

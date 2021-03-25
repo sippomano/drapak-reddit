@@ -48,8 +48,7 @@ public class CommentDaoSql implements CommentDao {
                 ps.setInt(11, comment.getAwardsCount());
                 ps.setString(12, comment.getPermalink());
 
-                int rowsUpdated = ps.executeUpdate();
-                log.info("Adding comment object to database. Updated rows: " + rowsUpdated);
+                ps.executeUpdate();
             }
         } catch (SQLException e) {
             log.error("create/update operation failed: " + e.getMessage());

@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,7 +35,7 @@ public class PostDaoSql implements PostDao {
     }
 
     @Override
-    public void addPosts(List<Post> posts) {
+    public void addPosts(Collection<Post> posts) {
         try (PreparedStatement ps = ds.getConnection().prepareStatement(ADD_POSTS)){
             log.info("posts list length: " + posts.size());
             for (Post post : posts) {
