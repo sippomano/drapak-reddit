@@ -29,6 +29,7 @@ public class PostDaoSql implements PostDao {
     private static final String SELECT_POSTS_ALL = "SELECT * FROM posts";
     private static final String SELECT_POSTS_ALL_SINCE = "SELECT * FROM posts WHERE creation_time>?";
     private static final String SELECT_POSTS_ALL_SINCE_UNTIL = "SELECT * FROM posts WHERE creation_time>? AND creation_time<?";
+    private static final String SELECT_POSTS_SUBREDDIT = "SELECT * FROM posts WHERE permalink LIKE ?";
 
     private PostDaoSql () {
 
@@ -59,6 +60,7 @@ public class PostDaoSql implements PostDao {
             }
         } catch (SQLException e) {
             log.error("create/update operation failed: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -70,7 +72,7 @@ public class PostDaoSql implements PostDao {
             try (ResultSet rs = ps.executeQuery()) {
                 int count = 0;
                 while (rs.next()) {
-                    post = createPostFromResultSet(rs);
+                    post = createPostFromResultSet(rs, true);
                     count++;
                 }
                 if (count > 1) {
@@ -90,7 +92,7 @@ public class PostDaoSql implements PostDao {
         List<Post> posts = new ArrayList<>();
         try (ResultSet rs = ds.getConnection().prepareStatement(SELECT_POSTS_ALL).executeQuery()) {
             while (rs.next()) {
-                posts.add(createPostFromResultSet(rs));
+                posts.add(createPostFromResultSet(rs, true));
             }
             log.info("Number of posts in list: " + posts.size());
         } catch (SQLException e) {
@@ -108,7 +110,7 @@ public class PostDaoSql implements PostDao {
             ps.setLong(1, since);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    posts.add(createPostFromResultSet(rs));
+                    posts.add(createPostFromResultSet(rs, true));
                 }
                 log.info("Number of posts in list: " + posts.size());
             }
@@ -132,7 +134,7 @@ public class PostDaoSql implements PostDao {
             ps.setLong(2, until);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    posts.add(createPostFromResultSet(rs));
+                    posts.add(createPostFromResultSet(rs, true));
                 }
                 log.info("Number of posts in list: " + posts.size());
             }
@@ -149,7 +151,41 @@ public class PostDaoSql implements PostDao {
         return getPosts(sinceEpoch, untilEpoch);
     }
 
-    private Post createPostFromResultSet(ResultSet rs) throws SQLException{
+    @Override
+    public List<Post> getPosts(String subreddit) {
+        List<Post> posts = new ArrayList<>();
+        try (PreparedStatement ps = ds.getConnection().prepareStatement(SELECT_POSTS_SUBREDDIT)) {
+            subreddit = "/r/" + subreddit + "/%";
+            ps.setString(1, subreddit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    posts.add(createPostFromResultSet(rs, true));
+                }
+                log.info("Number of posts in list: " + posts.size());
+            }
+        } catch (SQLException e) {
+            log.error("read operation failed: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return posts;
+    }
+
+    @Override
+    public List<Post> getPostsNoComments() {
+        List<Post> posts = new ArrayList<>();
+        try (ResultSet rs = ds.getConnection().prepareStatement(SELECT_POSTS_ALL).executeQuery()) {
+            while (rs.next()) {
+                posts.add(createPostFromResultSet(rs, false));
+            }
+            log.info("Number of posts in list: " + posts.size());
+        } catch (SQLException e) {
+            log.error("read operation failed: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return posts;
+    }
+
+    private Post createPostFromResultSet(ResultSet rs, boolean injectComments) throws SQLException{
         Post post = new Post();
         post.setAuthor(rs.getString("author"));
         post.setText(rs.getString("text"));
@@ -161,10 +197,11 @@ public class PostDaoSql implements PostDao {
         post.setAwardsCount(rs.getInt("awards_count"));
         post.setScore(rs.getInt("score"));
         post.setCreationTime(rs.getLong("creation_time"));
-        //TBD post.setComments()
-        List<Comment> comments = commentDao.getCommentsForPost(post.getPermalink());
-        log.info("Comments for post: " + comments.size());
-        post.setComments(comments);
+        if (injectComments) {
+            List<Comment> comments = commentDao.getCommentsForPost(post.getPermalink());
+            log.info("Comments for post: " + comments.size());
+            post.setComments(comments);
+        }
         log.info("Post created: " + post.toString());
         return post;
     }

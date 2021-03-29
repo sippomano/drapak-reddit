@@ -13,4 +13,5 @@ public interface CommentDao {
     List<Comment> getComments(long since);
     List<Comment> getComments(long since, long until);
     List<Comment> getCommentsForPost(String postPermalink);
+    List<Comment> getComments(String subreddit);
 }

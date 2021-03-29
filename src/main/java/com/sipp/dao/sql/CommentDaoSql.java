@@ -16,8 +16,8 @@ import java.util.Optional;
 @Slf4j
 public class CommentDaoSql implements CommentDao {
 
-    private static CommentDaoSql instance = new CommentDaoSql();
-    private static DataSource ds = DataSourceSupplier.get();
+    private static final CommentDaoSql instance = new CommentDaoSql();
+    private static final DataSource ds = DataSourceSupplier.get();
 
     private CommentDaoSql() {
     }
@@ -29,6 +29,7 @@ public class CommentDaoSql implements CommentDao {
     private static final String SELECT_COMMENTS_ALL_SINCE = "SELECT * FROM comments WHERE creation_time>?";
     private static final String SELECT_COMMENTS_ALL_SINCE_UNTIL = "SELECT * FROM comments WHERE creation_time>? AND creation_time<?";
     private static final String SELECT_COMMENTS_FOR_POST = "SELECT * FROM comments WHERE post_permalink=?";
+    private static final String SELECT_COMMENTS_SUBREDDIT = "SELECT * FROM comments WHERE permalink LIKE ?";
 
     @Override
     public void addComments(List<Comment> comments) {
@@ -52,6 +53,7 @@ public class CommentDaoSql implements CommentDao {
             }
         } catch (SQLException e) {
             log.error("create/update operation failed: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -145,6 +147,25 @@ public class CommentDaoSql implements CommentDao {
         List<Comment> comments = new ArrayList<>();
         try (PreparedStatement ps = ds.getConnection().prepareStatement(SELECT_COMMENTS_FOR_POST)) {
             ps.setString(1, postPermalink);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    comments.add(createCommentFromResultSet(rs));
+                }
+            }
+            log.info("Number of comments in list: " + comments.size());
+        } catch (SQLException e) {
+            log.error("read operation failed: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return comments;
+    }
+
+    @Override
+    public List<Comment> getComments(String subreddit) {
+        List<Comment> comments = new ArrayList<>();
+        try (PreparedStatement ps = ds.getConnection().prepareStatement(SELECT_COMMENTS_SUBREDDIT)) {
+            subreddit = "/r/" + subreddit + "/%";
+            ps.setString(1, subreddit);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     comments.add(createCommentFromResultSet(rs));

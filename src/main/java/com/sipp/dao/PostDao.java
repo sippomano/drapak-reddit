@@ -14,4 +14,6 @@ public interface PostDao {
     List<Post> getPosts();
     List<Post> getPosts(long since);
     List<Post> getPosts(long since, long until);
+    List<Post> getPosts(String subreddit);
+    List<Post> getPostsNoComments();
 }
