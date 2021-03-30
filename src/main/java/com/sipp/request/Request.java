@@ -50,17 +50,6 @@ public class Request {
         }
     }
 
-    private static String executeRequestReturnResponse(CloseableHttpClient client, HttpGet request) throws IOException {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(client.execute(request).getEntity().getContent()))){
-            StringBuilder sb = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                sb.append(line);
-            }
-            return sb.toString();
-        }
-    }
-
     public static String getListing(String subreddit, PostCategory postCategory) throws IOException, URISyntaxException {
         switch (postCategory) {
             case HOT:
@@ -87,6 +76,17 @@ public class Request {
             request.setURI(uri);
 
             return executeRequestReturnResponse(client, request);
+        }
+    }
+
+    private static String executeRequestReturnResponse(CloseableHttpClient client, HttpGet request) throws IOException {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(client.execute(request).getEntity().getContent()))){
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+            return sb.toString();
         }
     }
 

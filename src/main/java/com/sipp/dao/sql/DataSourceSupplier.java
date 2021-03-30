@@ -9,7 +9,6 @@ import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
-import java.util.function.Supplier;
 
 @Slf4j
 public final class DataSourceSupplier {

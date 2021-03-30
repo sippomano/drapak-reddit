@@ -6,18 +6,20 @@ import com.sipp.dao.sql.CommentDaoSql;
 import com.sipp.dao.sql.PostDaoSql;
 import com.sipp.model.Comment;
 import com.sipp.model.Post;
+import com.sipp.processing.WordCounter;
 import com.sipp.request.Request;
 import com.sipp.request.ResponseParser;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Stream;
 
 @Slf4j
 public class RService {
+
+    //TBD? caching data from db with auto refresh. Here or in dao? Implement more operations on cache? copyOnWriteArraySet for future multithreading?
 
     public static void fetchData() throws IOException, URISyntaxException, InterruptedException {
         PostDao postDao = PostDaoSql.getInstance();
@@ -25,7 +27,7 @@ public class RService {
 
         //loop all subreddits- list in properties
         for (String subreddit : AppProperties.getProperty("subreddits").split(",")) {
-            Set<Post> allSubredditPosts= new HashSet<>();
+            Set<Post> allSubredditPosts = new HashSet<>();
             //loop all listings categories
             for (Request.PostCategory category : Request.PostCategory.values()) {
                 //fetch posts from reddit for each category
@@ -34,23 +36,67 @@ public class RService {
                 allSubredditPosts.addAll(posts);
                 Thread.sleep(1050);
             }
-                log.debug("all posts included from the subreddit: " + subreddit + "from this read: " + allSubredditPosts.size());
-                //add posts to database and loop the Set to get the comments
-                postDao.addPosts(allSubredditPosts);
-                for (Post post : allSubredditPosts) {
+            log.debug("all posts included from the subreddit: " + subreddit + "from this read: " + allSubredditPosts.size());
+            //add posts to database and loop the Set to get the comments
+            postDao.addPosts(allSubredditPosts);
+            for (Post post : allSubredditPosts) {
 
-                    log.debug("Adding comments for post: " + post.getPermalink());
-                    //fetch comments for post from reddit
-                    List<Comment> comments = ResponseParser.parseCommentTree(Request.getCommentsForPost(post.getPermalink()));
-                    //add to the database
-                    commentDao.addComments(comments);
+                log.debug("Adding comments for post: " + post.getPermalink());
+                //fetch comments for post from reddit
+                List<Comment> comments = ResponseParser.parseCommentTree(Request.getCommentsForPost(post.getPermalink()));
+                //add to the database
+                commentDao.addComments(comments);
 
-                    log.info("Number of comments: " + comments.size() + " for post: " + post.getPermalink());
-                    post.setComments(comments);
+                log.info("Number of comments: " + comments.size() + " for post: " + post.getPermalink());
+                post.setComments(comments);
 
-                    //no more than 60 requests per minute - api rules
-                    Thread.sleep(1050);
-                }
+                //no more than 60 requests per minute - api rules
+                Thread.sleep(1050);
             }
         }
     }
+
+    public static Map<String, Long> getTickerCount() throws IOException {
+        List<Post> posts = PostDaoSql.getInstance().getPosts();
+        Map<String, Long> allTickers = new HashMap<>();
+        for (Post post : posts) {
+            String allComments = post.getComments().stream().flatMap(s -> Stream.of(s.getText() + " "))
+                    .reduce(String::concat)
+                    .orElse("");
+            Map<String, Long> tickers = WordCounter.getWordCountTickers(post.getText() + " " + allComments);
+            for (Map.Entry<String, Long> entry : tickers.entrySet()) {
+                allTickers.merge(entry.getKey(), entry.getValue(), (Long::sum));
+            }
+            log.info("another iteration: number of tickers: " + allTickers.values().size());
+        }
+        //logging
+        allTickers.entrySet().stream()
+                .sorted((e1, e2) -> (int)(e1.getValue()-e2.getValue()))
+                .forEach(e -> log.info(e.getKey() + ": " + e.getValue()));
+        return allTickers;
+    }
+
+    public static Map<String, Long> getWordCount() throws IOException {
+        List<Post> posts = PostDaoSql.getInstance().getPosts();
+        Map<String, Long> allWords = new HashMap<>();
+        for (Post post : posts) {
+            String allComments = post.getComments().stream().flatMap(s -> Stream.of(s.getText() + " "))
+                    .reduce(String::concat)
+                    .orElse("");
+            Map<String, Long> tickers = WordCounter.getWordCount(post.getText() + " " + allComments);
+            for (Map.Entry<String, Long> entry : tickers.entrySet()) {
+                allWords.merge(entry.getKey(), entry.getValue(), (Long::sum));
+            }
+            log.info("another iteration: number of tickers: " + allWords.values().size());
+        }
+        //logging
+        allWords.entrySet().stream()
+                .sorted((e1, e2) -> (int)(e1.getValue()-e2.getValue()))
+                .forEach(e -> log.info(e.getKey() + ": " + e.getValue()));
+        return allWords;
+    }
+}
+
+
+
+

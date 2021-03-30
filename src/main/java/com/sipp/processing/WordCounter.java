@@ -1,10 +1,12 @@
 package com.sipp.processing;
 
 import com.sipp.config.TickerLoader;
+import com.vdurmont.emoji.EmojiParser;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -30,12 +32,20 @@ public class WordCounter {
     }
 
     private static List<String> createCleanWordListFromText(String text) {
-        List<String> words = Arrays.stream(text.replaceAll("\\\\n", " ").split(" "))
-                .map(s -> s.trim()
-                        .replaceAll("\\.|\\(|\\)|,|\\?|:|!", ""))
-                .filter(s -> !s.isEmpty() && !s.matches("\\d+"))
+        Collection<String> emojis = EmojiParser.extractEmojis(text)
+                .stream()
+                .map(s -> s.length() <= 2 ? s : s.substring(0, 2))
                 .collect(Collectors.toList());
-        log.info("list of clean words: " + words);
+        text = EmojiParser.removeAllEmojis(text);
+        List<String> words = Arrays.stream(text.replaceAll("\\\\n", " ")
+                .split(" "))
+                    .filter(s -> !s.contains("http"))
+                    .map(s -> s.trim()
+                            .replaceAll("\\W|\\d", ""))
+                    .filter(s -> !s.matches("\\s*") && !s.isEmpty())
+                    .collect(Collectors.toList());
+        log.info("list of clean words: " + words + " emojis: " + emojis);
+        words.addAll(emojis);
         return words;
     }
 }
