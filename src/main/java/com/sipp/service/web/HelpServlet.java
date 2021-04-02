@@ -1,39 +1,45 @@
 package com.sipp.service.web;
 
-import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.*;
-import java.util.HashMap;
-import java.util.Map;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 
-@WebServlet(name = "HelpServlet", urlPatterns = {"/"})
+
+import java.io.*;
+import java.util.*;
+
+@Slf4j
 public class HelpServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        try (BufferedReader reader = new BufferedReader(new FileReader("src\\main\\resources\\web\\instruction.html"))){
+        resp.setContentType("text/html");
+        log.info("Inside GET in HelpServlet");
+        String path = this.getServletContext().getRealPath("/index.html");
+        log.info("path: " + path);
+        try (BufferedReader reader = new BufferedReader(new FileReader(path))){
+
             StringBuilder sb = new StringBuilder();
             String line;
             while ((line = reader.readLine()) != null) {
                 sb.append(line);
             }
+            log.info("File has been read, will be returned to the client");
             resp.getWriter().print(sb.toString());
         } catch (IOException e) {
-            //send proper code with message
+            resp.sendError(500, "Internal error. Unable to read instruction.");
         }
     }
 
     static Map<String, String> getQueryStringParams(String queryString) {
         String[] parametersPairs =  queryString.split("&");
         Map<String, String> parameters = new HashMap<>();
-        for (String parameter : parametersPairs) {
-            String key = parameter.split("=")[0];
-            String value = parameter.split("=")[1];
-
-            parameters.merge(key, value, (v1, v2) -> v1 +"," + v2);
+        for (String parameterPair : parametersPairs) {
+            String key = parameterPair.substring(0, parameterPair.indexOf('='));
+            String value = parameterPair.substring(parameterPair.indexOf('=')+1);
+            parameters.merge(key, value, (v1, v2) -> v1 + "," + v2);
         }
         return parameters;
     }

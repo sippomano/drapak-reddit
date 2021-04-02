@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 public class AppProperties {
 
     private static final Properties generalProperties;
-    private static final String configPath = "src/main/resources/config.properties";
+    private static final String configPath = System.getProperty("catalina.base") + "/webapps/drapak-reddit/WEB-INF/classes/config.properties";
 
     static {
         generalProperties = new Properties();

@@ -7,6 +7,7 @@
     <groupId>org.example</groupId>
     <artifactId>drapak-reddit</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>war</packaging>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
@@ -41,19 +42,14 @@
             <version>42.2.19</version>
         </dependency>
         <dependency>
-            <groupId>org.bytedeco.javacpp-presets</groupId>
-            <artifactId>tesseract-platform</artifactId>
-            <version>4.0.0-1.4.4</version>
-        </dependency>
-        <dependency>
             <groupId>com.vdurmont</groupId>
             <artifactId>emoji-java</artifactId>
             <version>5.1.1</version>
         </dependency>
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>3.1.0</version>
+            <groupId>org.apache.tomcat</groupId>
+            <artifactId>tomcat-servlet-api</artifactId>
+            <version>10.0.4</version>
         </dependency>
     </dependencies>
 
@@ -63,6 +59,17 @@
                 <directory>src/main/resources</directory>
             </resource>
         </resources>
+
+        <plugins>
+                <plugin>
+                    <artifactId>maven-war-plugin</artifactId>
+                    <version>3.3.1</version>
+                    <extensions>false</extensions>
+                    <configuration>
+                        <failOnMissingWebXml>false</failOnMissingWebXml>
+                    </configuration>
+                </plugin>
+        </plugins>
     </build>
 
 </project>

@@ -1,0 +1,46 @@
+<web-app xmlns="http://java.sun.com/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
+                      http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+         version="3.0"
+         metadata-complete="true">
+
+    <listener>
+        <listener-class>com.sipp.service.web.DataListener</listener-class>
+    </listener>
+
+    <servlet>
+        <servlet-name>HelpServlet</servlet-name>
+        <servlet-class>com.sipp.service.web.HelpServlet</servlet-class>
+    </servlet>
+
+    <servlet>
+        <servlet-name>PostServlet</servlet-name>
+        <servlet-class>com.sipp.service.web.PostServlet</servlet-class>
+    </servlet>
+
+    <servlet>
+        <servlet-name>CommentServlet</servlet-name>
+        <servlet-class>com.sipp.service.web.PostServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>default</servlet-name>
+        <url-pattern>/</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>HelpServlet</servlet-name>
+        <url-pattern>/help</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>PostServlet</servlet-name>
+        <url-pattern>/api/getPost</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>CommentServlet</servlet-name>
+        <url-pattern>/api/Comment</url-pattern>
+    </servlet-mapping>
+</web-app>

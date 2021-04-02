@@ -9,6 +9,7 @@ import com.sipp.model.Post;
 import com.sipp.processing.WordCounter;
 import com.sipp.request.Request;
 import com.sipp.request.ResponseParser;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -19,7 +20,10 @@ import java.util.stream.Stream;
 @Slf4j
 public class RService {
 
-    //TBD? caching data from db with auto refresh. Here or in dao? Implement more operations on cache? copyOnWriteArraySet for future multithreading?
+    @Getter
+    private static final Set<Post> postCache = new HashSet<>();
+    @Getter
+    private static final Set<Comment> commentCache = new HashSet<>();
 
     public static void fetchData() throws IOException, URISyntaxException, InterruptedException {
         PostDao postDao = PostDaoSql.getInstance();
@@ -55,6 +59,23 @@ public class RService {
             }
         }
     }
+
+    public static long loadDataToCache() {
+        List<Post> posts = PostDaoSql.getInstance().getPosts();
+        log.info("Post list loaded from the database, size: " + posts.size());
+        List<Comment> comments = CommentDaoSql.getInstance().getComments();
+        log.info("Comment list loaded from the database, size: " + comments.size());
+        synchronized (postCache) {
+            postCache.addAll(posts);
+        }
+        synchronized (commentCache) {
+            commentCache.addAll(comments);
+        }
+        long timestamp = System.currentTimeMillis();
+        log.info("cache updated at time: " + timestamp);
+        return timestamp;
+    }
+
 
     public static Map<String, Long> getTickerCount() throws IOException {
         List<Post> posts = PostDaoSql.getInstance().getPosts();
