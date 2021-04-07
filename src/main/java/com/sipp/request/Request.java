@@ -32,7 +32,7 @@ public class Request {
     }
 
     public enum PostCategory {
-        HOT, RISING, TOP, CONTROVERSIAL, NEW;
+        HOT, RISING, TOP, CONTROVERSIAL, NEW
     }
 
     static void prettyPrint(String json) throws JsonProcessingException {

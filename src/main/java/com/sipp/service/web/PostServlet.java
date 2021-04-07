@@ -25,7 +25,6 @@ public class PostServlet extends HttpServlet {
         resp.setContentType("application/json");
         try {
             Map<String, String> parameters = getQueryStringParams(req.getQueryString());
-            //unmodifiable list will be supplied by RService method
             Set<Post> posts = RService.getPostCache();
             posts = posts.stream()
                     .parallel()

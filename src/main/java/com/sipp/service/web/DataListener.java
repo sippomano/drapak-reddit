@@ -28,7 +28,7 @@ public class DataListener implements ServletContextListener {
                     log.info("Data cache has been updated at: " + timestamp);
                 }
             } catch (InterruptedException e) {
-                log.info("data thread has been interrupted, data flow has been stopped");
+                log.error("data thread has been interrupted, data flow has been stopped");
                 return "DataListener data thread has been stopped";
             }
         };
