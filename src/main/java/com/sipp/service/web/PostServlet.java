@@ -26,7 +26,7 @@ public class PostServlet extends HttpServlet {
         try {
             Map<String, String> parameters = getQueryStringParams(req.getQueryString());
             //unmodifiable list will be supplied by RService method
-            Set<Post> posts = RService.getPostCache();
+            Set<Post> posts = RService.getPosts();
             posts = posts.stream()
                     .parallel()
                     .filter(p -> !parameters.containsKey("subreddit") || (Arrays.asList(parameters.get("subreddit").split(","))).contains(p.getSubreddit()))

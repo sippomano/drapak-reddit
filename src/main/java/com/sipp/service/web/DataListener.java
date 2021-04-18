@@ -38,6 +38,7 @@ public class DataListener implements ServletContextListener {
 
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
+        log.info("In DataListener contextDestroyed method: " + sce.toString());
         executorService.shutdownNow();
     }
 }

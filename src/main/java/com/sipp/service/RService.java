@@ -20,9 +20,7 @@ import java.util.stream.Stream;
 @Slf4j
 public class RService {
 
-    @Getter
     private static final Set<Post> postCache = new HashSet<>();
-    @Getter
     private static final Set<Comment> commentCache = new HashSet<>();
 
     public static void fetchData() throws IOException, URISyntaxException, InterruptedException {
@@ -75,6 +73,15 @@ public class RService {
         log.info("cache updated at time: " + timestamp);
         return timestamp;
     }
+
+    public static Set<Post> getPosts() {
+        return Collections.unmodifiableSet(postCache);
+    }
+
+    public static Set<Comment> getComments() {
+        return Collections.unmodifiableSet(commentCache);
+    }
+
 
 
     public static Map<String, Long> getTickerCount() throws IOException {
