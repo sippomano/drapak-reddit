@@ -22,6 +22,7 @@ public class RService {
 
     private static final Set<Post> postCache = new HashSet<>();
     private static final Set<Comment> commentCache = new HashSet<>();
+    private static long lastFetchOldestPost = 0;
 
     public static void fetchData() throws IOException, URISyntaxException, InterruptedException {
         PostDao postDao = PostDaoSql.getInstance();
@@ -55,18 +56,24 @@ public class RService {
                 //no more than 60 requests per minute - api rules
                 Thread.sleep(1050);
             }
+            lastFetchOldestPost = allSubredditPosts.stream()
+                    .mapToLong(Post::getCreationTime)
+                    .min()
+                    .orElseThrow(() -> new IllegalStateException("The creation time in posts returned from database is empty. Unable to compare"));
         }
     }
 
     public static long loadDataToCache() {
-        List<Post> posts = PostDaoSql.getInstance().getPosts();
+        List<Post> posts = PostDaoSql.getInstance().getPosts(lastFetchOldestPost);
         log.info("Post list loaded from the database, size: " + posts.size());
-        List<Comment> comments = CommentDaoSql.getInstance().getComments();
+        List<Comment> comments = CommentDaoSql.getInstance().getComments(lastFetchOldestPost);
         log.info("Comment list loaded from the database, size: " + comments.size());
         synchronized (postCache) {
+            postCache.removeAll(posts);
             postCache.addAll(posts);
         }
         synchronized (commentCache) {
+            commentCache.removeAll(comments);
             commentCache.addAll(comments);
         }
         long timestamp = System.currentTimeMillis();
